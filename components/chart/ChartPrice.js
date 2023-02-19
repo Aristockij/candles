@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, FlatList, StyleSheet, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View} from "react-native";
 import Axios from 'axios'
-import {apiData} from "../../config/config";
+import {apiData, socket} from "../../config/config";
 import axios from "axios";
 
 import { Dimensions } from "react-native";
@@ -19,7 +19,6 @@ const ChartPrice = () => {
 
 
     useEffect(()=>{
-
         axios.get(apiData + '/api/v3/klines', {
             params: {
                 symbol: 'BTCUSDT',
@@ -35,8 +34,25 @@ const ChartPrice = () => {
             })
     }, [])
 
+    //показать данные по свечам в реальном времени:
+    // const link = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
+    //
+    // useEffect(()=>{
+    //     link.onopen = function (e){
+    //         console.log('open')
+    //     }
+    //     link.onmessage=e=>{
+    //         setData(e.data)
+    //     }
+    // },[])
+    // useEffect(()=>{
+    //     setTimeout(()=>{
+    //         console.log(JSON.parse(data))
+    //         },1000);
+    // }, [])
 
-    const candles = data.slice(0, 20);
+    // const candles = data.slice(0, 20);
+    const candles = data;
 
     const getDomain = (rows) => {
         const values = rows.map((item, index) => [Number(item[2]),Number(item[3])]).flat();
@@ -51,30 +67,33 @@ const ChartPrice = () => {
         // .domain([0, Math.max(...domain) - Math.min(...domain)])
         .domain([0, domain[1]-domain[0]])
         .range([0, size]);
-    const width = size/candles.length;
-    console.log(width)
+    // const width = size/candles.length;
+    const width = 20;
 
     return (
         <View style={styles.container}>
             {isLoading ?
                 <ActivityIndicator/> :
                 <>
-                    <Svg width={'100%'} height={size}>
-                        {data.map((candle, index) => (
-                            <Candle
-                                key={index}
-                                candle={candle}
-                                index={index}
-                                width={width}
-                                close={candle[4]}
-                                open={candle[1]}
-                                high={candle[2]}
-                                low={candle[3]}
-                                scaleBody={scaleBody}
-                                scaleY={scaleY}
-                            />
-                        ))}
-                    </Svg>
+                    <ScrollView  style={styles.klines}>
+                        <Svg width={'100%'} height={size}>
+                            {data.map((candle, index) => (
+                                <Candle
+                                    key={index}
+                                    candle={candle}
+                                    index={index}
+                                    width={width}
+                                    close={candle[4]}
+                                    open={candle[1]}
+                                    high={candle[2]}
+                                    low={candle[3]}
+                                    scaleBody={scaleBody}
+                                    scaleY={scaleY}
+                                />
+                            ))}
+                        </Svg>
+
+                    </ScrollView>
 
                 </>
             }
@@ -89,6 +108,9 @@ const styles = StyleSheet.create({
     },
     chart: {
         flex: 1
+    },
+    klines:{
+        width: 'auto'
     }
 })
 
